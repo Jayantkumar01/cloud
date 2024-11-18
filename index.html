@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple CRUD App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #007BFF;
+            color: #fff;
+        }
+        input {
+            padding: 5px;
+            margin: 5px;
+            width: calc(100% - 12px);
+        }
+        button {
+            padding: 8px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button.delete {
+            background-color: #dc3545;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Simple CRUD Application</h2>
+        <input type="text" id="name" placeholder="Enter Name" />
+        <input type="text" id="email" placeholder="Enter Email" />
+        <button onclick="addUser()">Add User</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="userTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Fetch all users from the database on page load
+        window.onload = fetchUsers;
+
+        async function fetchUsers() {
+    try {
+        const response = await fetch('/users');
+        const users = await response.json();
+
+        // Check if users is indeed an array
+        if (Array.isArray(users)) {
+            const userTable = document.getElementById('userTable');
+            userTable.innerHTML = '';
+            users.forEach(user => {
+                userTable.innerHTML += `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>
+                            <button onclick="deleteUser(${user.id})" class="delete">Delete</button>
+                        </td>
+                    </tr>`;
+            });
+        } else {
+            console.error('Expected an array but got:', users);
+            alert('Failed to load users. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error fetching users:', error);
+    }
+}
+
+
+        async function addUser() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+
+            if (name && email) {
+                await fetch('/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email }),
+                });
+                fetchUsers();
+            }
+        }
+
+        async function deleteUser(id) {
+            await fetch(`/users/${id}`, {
+                method: 'DELETE',
+            });
+            fetchUsers();
+        }
+    </script>
+</body>
+</html>
